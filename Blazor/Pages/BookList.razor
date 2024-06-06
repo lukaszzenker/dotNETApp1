@@ -1,0 +1,65 @@
+﻿@page "/BookList"
+@using Data
+@using DataLibrary
+@inject IBookService bookService
+
+<h3>Book List</h3>
+
+@if (books == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <ul>
+        @foreach (var book in books)
+        {
+            <li>
+                <strong>@book.Title</strong> - @book.PiulicationYear - @book.NumOfPages - @book.Genre
+                <button @onclick="() => DeleteBook(book.ISBN)">Delete</button>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private ICollection<Book> books;
+    private ICollection<Author> authors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBooks();
+    }
+
+    private async Task LoadBooks()
+    {
+        try
+        {
+            books = await bookService.GetAllBooksAsync();
+        }
+        catch (Exception e)
+        {
+            // Handle error loading books (show message, log, etc.)
+            Console.WriteLine($"Error loading books: {e.Message}");
+        }
+    }
+
+    private async Task DeleteBook(int isbn)
+    {
+        try
+        {
+            await bookService.DeleteBookAsync(isbn);
+            await LoadBooks(); // Refresh the book list after deletion
+        }
+        catch (ArgumentException e)
+        {
+            // Handle book not found
+            Console.WriteLine($"Error deleting book: {e.Message}");
+        }
+        catch (Exception e)
+        {
+            // Handle other exceptions
+            Console.WriteLine($"Error deleting book: {e.Message}");
+        }
+    }
+}

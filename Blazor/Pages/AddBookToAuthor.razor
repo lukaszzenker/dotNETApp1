@@ -1,0 +1,118 @@
+﻿@page "/AddBookToAuthor"
+@using DataLibrary
+@using Data
+
+@inject IAuthorService authorService
+
+
+<div class="card">
+    @if (authors == null)
+    {
+        <label> .. Loading Authors ..</label>
+    }
+    else if (!authors.Any())
+    {
+        <label> No authors in the database. Please add some..</label>
+    }
+    <h3>AddBookToAuthor</h3>
+    <label for="authorSelect"> Select an author: </label>
+    <select id="authorSelect" @onchange="OnAuthorSelectChanged">
+        <option value="">-- Select -- </option>
+        @if (authors is not null)
+        {
+            @foreach (var author in authors)
+            {
+                <option value="@author.ID">@author.LastName </option>
+            }
+        }
+
+    </select>
+    <label for="titleInput">Enter the Title :</label>
+    <input id="titleInput" type="text" @bind="Title" />
+
+    <label for="pubYearInput">Enter the publication year :</label>
+    <input id="pubYearInput" type="text" @bind-value="PiulicationYear" />
+
+    <label for="NumOfPagesInput">Enter the NumOfPages :</label>
+    <input id="NumOfPagesInput" type="text" @bind="NumOfPages" />
+
+    <label for="genreInput">Enter the genre :</label>
+    <input id="genreInput" type="text" @bind="Genre" />
+
+    @if (!string.IsNullOrEmpty(resultMsg))
+    {
+        <label style="color: @color">@resultMsg</label>
+    }
+
+    <button @onclick="AddBook" disabled="@string.IsNullOrEmpty(selectedName)">Add Book</button>
+</div>
+
+
+@code {
+    public ICollection<Author> authors;
+    public string selectedName;
+    private string Title;
+    private int PiulicationYear;
+    private int NumOfPages;
+    private string Genre;
+    private int selectedId;
+    private string resultMsg = "";
+    private string color = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            authors = await authorService.GetAllAuthorsAsync();
+        }
+        catch (Exception e)
+        {
+            // Log or display the error message
+            Console.WriteLine($"Error retrieving authors: {e.Message}");
+        }
+    }
+
+
+    private void OnAuthorSelectChanged(ChangeEventArgs e)
+    {
+        string selectedAuthorId = e.Value?.ToString();
+
+        var selectedAuthor = authors.FirstOrDefault(t => t.ID.ToString() == selectedAuthorId);
+
+        if (selectedAuthor != null)
+        {
+            selectedName = selectedAuthor.LastName;
+            if (int.TryParse(selectedAuthorId, out int finalId))
+            {
+                selectedId = finalId;
+            }
+            else
+            {
+                resultMsg = "I could not parse the author Id";
+            }
+        }
+        else
+        {
+            selectedName = "No book selected";
+        }
+    }
+
+    private async void AddBook()
+    {
+        try
+        {
+            var idOfAuthor = selectedId;
+
+
+            await authorService.AddBookToAuthorAsync(Title, PiulicationYear, NumOfPages, Genre, idOfAuthor);
+            resultMsg = "Book added succesfully";
+            color = "green";
+        }
+        catch (Exception e)
+        {
+            resultMsg = "Error creating the book: " + e.Message;
+            color = "red";
+        }
+    }
+}

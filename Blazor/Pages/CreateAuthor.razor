@@ -1,0 +1,44 @@
+﻿@page "/CreateAuthor"
+@using DataLibrary;
+@using Data;
+
+@inject IAuthorService authorService;
+
+<div class="card">
+    <h3>CreateAuthor</h3>
+    <div class="form-group field">
+        <label>First Name:</label>
+        <input type="text" @bind="FirstName" @bind:event="oninput" />
+
+        <label>Last Name:</label>
+        <input type="text" @bind="LastName" @bind:event="oninput" />
+    </div>
+    <div class="button-row">
+        <button @onclick="Create" disabled="@(string.IsNullOrEmpty(LastName))" class="acceptbtn">Create</button>
+    </div>
+</div>
+
+@code {
+    private string FirstName = "";
+    private string LastName = "";
+    private string resultMsg = "";
+    private string color = "";
+
+    private async Task Create()
+    {
+        resultMsg = "";
+
+        try
+        {
+            Author author = new Author(0, FirstName, LastName);
+            await authorService.CreateAuthorAsync(author);
+            resultMsg = "Author created successfully!";
+            color = "green";
+        }
+        catch (Exception e)
+        {
+            resultMsg = "Error creating author: " + e.Message;
+            color = "red";
+        }
+    }
+}
